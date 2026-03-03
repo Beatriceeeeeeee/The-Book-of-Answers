@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>答案之书 · Healing Answers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gloock&family=ZCOOL+XiaoWei&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="background">
+      <div class="stars stars-layer-1"></div>
+      <div class="stars stars-layer-2"></div>
+      <div class="gradient-overlay"></div>
+    </div>
+
+    <main class="page">
+      <header class="header">
+        <h1 class="title">答案之书</h1>
+        <p class="subtitle">静下心，翻开一页属于你的答案</p>
+      </header>
+
+      <section class="question-card">
+        <label class="field-label" for="question-input">你的问题（不超过 30 个字）</label>
+        <div class="question-row">
+          <div class="question-input-wrapper">
+            <input
+              id="question-input"
+              class="question-input"
+              type="text"
+              maxlength="30"
+              placeholder="把此刻最想问的问题，轻轻写下来..."
+            />
+            <div class="char-counter" id="char-counter">0 / 30</div>
+          </div>
+
+          <div class="healing-col">
+            <button class="healing-toggle" id="healing-toggle" type="button">
+              <span class="toggle-indicator" aria-hidden="true"></span>
+              <span class="toggle-label">疗愈状态</span>
+            </button>
+            <p class="healing-hint">可勾选，可能获得更好的疗愈效果哦。</p>
+          </div>
+        </div>
+
+        <button id="draw-answer-btn" class="primary-btn" type="button">
+          翻开答案之书
+        </button>
+
+        <p class="hint-text">
+          轻按按钮，想象眼前有一本静静摊开的书，答案会从中浮现。
+        </p>
+      </section>
+
+      <section class="answer-section" id="answer-section" aria-live="polite">
+        <div class="book-frame">
+          <div class="book-core">
+            <img
+              class="book-image"
+              src="./assets/book-open.png"
+              alt="摊开的答案之书"
+            />
+            <div class="page-placeholder" id="page-placeholder"></div>
+            <div class="page-content" id="answer-text"></div>
+          </div>
+          <div class="book-shadow"></div>
+        </div>
+      </section>
+
+      <div class="deep-toggle-wrap">
+        <button class="secondary-btn deep-toggle-btn" id="toggle-deep-panel" type="button">
+          获取深度解答
+        </button>
+      </div>
+
+      <section class="deep-section deep-section-collapsed" id="deep-section">
+        <h2 class="section-title">深度解答（可选）</h2>
+        <p class="section-desc">
+          如果你希望得到一段更细致、更贴近当下的引导，可以在下方配置你自己的
+          API Key，并选择要使用的大模型进行深度解答。我们不会保存你的任何 Key。
+        </p>
+
+        <div class="provider-grid">
+          <div class="provider-card">
+            <div class="provider-header">
+              <span class="provider-name">Claude</span>
+              <span class="provider-tag">Anthropic</span>
+            </div>
+            <label class="field-label small" for="anthropic-key">API Key</label>
+            <input
+              id="anthropic-key"
+              type="password"
+              class="key-input"
+              placeholder="sk-ant-..."
+            />
+          </div>
+
+          <div class="provider-card">
+            <div class="provider-header">
+              <span class="provider-name">GPT</span>
+              <span class="provider-tag">OpenAI</span>
+            </div>
+            <label class="field-label small" for="openai-key">API Key</label>
+            <input
+              id="openai-key"
+              type="password"
+              class="key-input"
+              placeholder="sk-..."
+            />
+          </div>
+
+          <div class="provider-card">
+            <div class="provider-header">
+              <span class="provider-name">Gemini</span>
+              <span class="provider-tag">Google</span>
+            </div>
+            <label class="field-label small" for="gemini-key">API Key</label>
+            <input
+              id="gemini-key"
+              type="password"
+              class="key-input"
+              placeholder="AIza..."
+            />
+          </div>
+
+          <div class="provider-card">
+            <div class="provider-header">
+              <span class="provider-name">DeepSeek</span>
+              <span class="provider-tag">deepseek.com</span>
+            </div>
+            <label class="field-label small" for="deepseek-key">API Key</label>
+            <input
+              id="deepseek-key"
+              type="password"
+              class="key-input"
+              placeholder="sk-..."
+            />
+          </div>
+        </div>
+
+        <div class="deep-controls">
+          <div class="model-select">
+            <span class="field-label small">选择使用的大模型</span>
+            <div class="pill-group" id="model-select-group">
+              <button class="pill pill-active" data-model="anthropic">
+                Claude
+              </button>
+              <button class="pill" data-model="openai">GPT</button>
+              <button class="pill" data-model="gemini">Gemini</button>
+              <button class="pill" data-model="deepseek">DeepSeek</button>
+            </div>
+          </div>
+
+          <button class="secondary-btn" id="deep-answer-btn" type="button">
+            获取深度解答
+          </button>
+        </div>
+
+        <p class="security-note">
+          你的 API Key 只会被安全地保存在你自己的浏览器本地
+         （使用本地存储），不会被上传到任何服务器。使用完毕后，如果这是公用或不安全的电脑，请务必点击
+          “清除保存的 Key”。
+        </p>
+
+        <button class="ghost-btn" id="clear-keys-btn" type="button">
+          清除保存的 Key
+        </button>
+
+        <div class="deep-result" id="deep-result">
+          <div class="deep-placeholder">
+            深度解答将在这里呈现，它会结合你刚刚输入的问题与翻到的答案，给出一段更细致的回应。
+          </div>
+          <div class="deep-content" id="deep-content"></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>愿这本小小的答案之书，陪你度过每一个需要答案的夜晚。</span>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
