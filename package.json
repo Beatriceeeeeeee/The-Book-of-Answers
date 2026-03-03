@@ -1,0 +1,22 @@
+{
+  "name": "healing-book-of-answers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "一个带有疗愈风格页面和多家大模型深度解答功能的「答案之书」网页应用。",
+  "scripts": {
+    "start": "npx serve .",
+    "preview": "npx serve ."
+  },
+  "keywords": [
+    "book-of-answers",
+    "healing",
+    "web",
+    "anthropic",
+    "openai",
+    "gemini",
+    "deepseek"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
