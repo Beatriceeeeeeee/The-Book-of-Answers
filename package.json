@@ -1,22 +1,13 @@
 {
-  "name": "healing-book-of-answers",
+  "name": "the-book-of-answer",
   "version": "1.0.0",
   "private": true,
-  "description": "一个带有疗愈风格页面和多家大模型深度解答功能的「答案之书」网页应用。",
+  "description": "本地运行的「答案之书」小网页，带大模型深度解答代理。",
+  "main": "server.js",
   "scripts": {
-    "start": "npx serve .",
-    "preview": "npx serve ."
+    "start": "node server.js"
   },
-  "keywords": [
-    "book-of-answers",
-    "healing",
-    "web",
-    "anthropic",
-    "openai",
-    "gemini",
-    "deepseek"
-  ],
-  "author": "",
-  "license": "MIT"
+  "dependencies": {
+    "express": "^4.21.2"
+  }
 }
-

@@ -311,6 +311,31 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // #region agent log
+    fetch("http://127.0.0.1:7348/ingest/bf8deb0c-8e9a-45f2-b9e0-7ba6b208a6af", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "8bd50f"
+      },
+      body: JSON.stringify({
+        sessionId: "8bd50f",
+        runId: "pre-fix",
+        hypothesisId: "H1",
+        location: "app.js:303",
+        message: "deepAnswer click before key selection",
+        data: {
+          selectedProvider,
+          hasAnthropicKey: !!(anthropicKeyInput.value || "").trim(),
+          hasOpenAIKey: !!(openaiKeyInput.value || "").trim(),
+          hasGeminiKey: !!(geminiKeyInput.value || "").trim(),
+          hasDeepSeekKey: !!(deepseekKeyInput.value || "").trim()
+        },
+        timestamp: Date.now()
+      })
+    }).catch(() => {});
+    // #endregion
+
     let key = "";
     if (selectedProvider === "anthropic") {
       key = anthropicKeyInput.value.trim();
@@ -321,6 +346,28 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (selectedProvider === "deepseek") {
       key = deepseekKeyInput.value.trim();
     }
+
+    // #region agent log
+    fetch("http://127.0.0.1:7348/ingest/bf8deb0c-8e9a-45f2-b9e0-7ba6b208a6af", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "8bd50f"
+      },
+      body: JSON.stringify({
+        sessionId: "8bd50f",
+        runId: "pre-fix",
+        hypothesisId: "H2",
+        location: "app.js:314",
+        message: "deepAnswer key resolved",
+        data: {
+          selectedProvider,
+          keyLength: (key || "").length
+        },
+        timestamp: Date.now()
+      })
+    }).catch(() => {});
+    // #endregion
 
     if (!key) {
       alert("请先在对应模型下方输入你的 API Key。");
@@ -370,8 +417,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (err) {
       console.error(err);
+      const msg = err && err.message ? String(err.message) : "";
       alert(
-        "调用大模型时出现了问题，请检查你的网络状况、API Key 是否正确和额度是否充足。"
+        msg
+          ? "调用大模型时出现了问题：" + msg + "。请检查网络、API Key 与额度。"
+          : "调用大模型时出现了问题，请检查你的网络状况、API Key 是否正确和额度是否充足。"
       );
     } finally {
       deepAnswerBtn.disabled = false;
@@ -383,88 +433,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // 各家大模型的调用封装（前端直连）
 async function callAnthropic(apiKey, systemPrompt, userPrompt) {
   const body = {
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 800,
-    system: systemPrompt,
-    messages: [
-      {
-        role: "user",
-        content: userPrompt
-      }
-    ]
+    apiKey,
+    systemPrompt,
+    userPrompt
   };
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    throw new Error("Anthropic API error");
-  }
-  const data = await res.json();
-  if (!data || !data.content || !data.content[0] || !data.content[0].text) {
-    return "";
-  }
-  return data.content[0].text;
-}
-
-async function callOpenAI(apiKey, systemPrompt, userPrompt) {
-  const body = {
-    model: "gpt-4.1-mini",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ],
-    max_tokens: 800
-  };
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    throw new Error("OpenAI API error");
-  }
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (typeof text === "string") {
-    return text;
-  }
-  if (Array.isArray(text)) {
-    return text.map((p) => (typeof p === "string" ? p : p.text || "")).join("");
-  }
-  return "";
-}
-
-async function callGemini(apiKey, systemPrompt, userPrompt) {
-  const model = "gemini-1.5-flash-latest";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-    apiKey
-  )}`;
-
-  const body = {
-    contents: [
-      {
-        role: "user",
-        parts: [
-          { text: `系统提示词：${systemPrompt}\n\n请根据以下信息进行回答：\n${userPrompt}` }
-        ]
-      }
-    ]
-  };
-
-  const res = await fetch(url, {
+  const res = await fetch("/api/anthropic", {
     method: "POST",
     headers: {
       "content-type": "application/json"
@@ -473,37 +447,83 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
   });
 
   if (!res.ok) {
-    throw new Error("Gemini API error");
+    const errData = await res.json().catch(() => ({}));
+    const detail = errData.detail || errData.error || res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  return text || "";
+  return data.reply || "";
 }
 
-async function callDeepSeek(apiKey, systemPrompt, userPrompt) {
+async function callOpenAI(apiKey, systemPrompt, userPrompt) {
   const body = {
-    model: "deepseek-chat",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt }
-    ],
-    max_tokens: 800
+    apiKey,
+    systemPrompt,
+    userPrompt
   };
 
-  const res = await fetch("https://api.deepseek.com/chat/completions", {
+  const res = await fetch("/api/openai", {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      Authorization: `Bearer ${apiKey}`
+      "content-type": "application/json"
     },
     body: JSON.stringify(body)
   });
 
   if (!res.ok) {
-    throw new Error("DeepSeek API error");
+    const errData = await res.json().catch(() => ({}));
+    const detail = errData.detail || errData.error || res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  return text || "";
+  return data.reply || "";
+}
+
+async function callGemini(apiKey, systemPrompt, userPrompt) {
+  const body = {
+    apiKey,
+    systemPrompt,
+    userPrompt
+  };
+
+  const res = await fetch("/api/gemini", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const detail = errData.detail || errData.error || res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  const data = await res.json();
+  return data.reply || "";
+}
+
+async function callDeepSeek(apiKey, systemPrompt, userPrompt) {
+  const body = {
+    apiKey,
+    systemPrompt,
+    userPrompt
+  };
+
+  const res = await fetch("/api/deepseek", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const detail = errData.detail || errData.error || res.statusText;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  const data = await res.json();
+  return data.reply || "";
 }
 
